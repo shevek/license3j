@@ -24,7 +24,7 @@ class HashCalculator {
 
     private void updateWithNetworkData(final MessageDigest md5,
                                        final List<Network.Interface.Data> interfaces) {
-        for (final var ni : interfaces) {
+        for (final Network.Interface.Data ni : interfaces) {
             md5.update(ni.name.getBytes(StandardCharsets.UTF_8));
             if (ni.hwAddress != null) {
                 md5.update(ni.hwAddress);

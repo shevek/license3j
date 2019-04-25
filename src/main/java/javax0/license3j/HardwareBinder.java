@@ -46,7 +46,7 @@ public class HardwareBinder {
      */
     public static void main(final String[] args)
         throws NoSuchAlgorithmException, SocketException, UnknownHostException {
-        final var hb = new HardwareBinder();
+        final HardwareBinder hb = new HardwareBinder();
         System.out.println("The UUID of the machine is:\n" + hb.getMachineIdString() + "\n");
     }
 

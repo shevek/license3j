@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Extended license works with a license object and provides features that are not core license functionalities.
@@ -36,10 +37,10 @@ public class RevocableLicense {
      * @throws MalformedURLException when the revocation url is not well formatted
      */
     public URL getRevocationURL() throws MalformedURLException {
-        final var revocationURLTemplate = license.get(REVOCATION_URL) == null ? null : license.get(REVOCATION_URL).getString();
+        final String revocationURLTemplate = license.get(REVOCATION_URL) == null ? null : license.get(REVOCATION_URL).getString();
         final String revocationURL;
         if (revocationURLTemplate != null) {
-            final var id = Optional.ofNullable(license.getLicenseId()).orElse(license.fingerprint());
+            final UUID id = Optional.ofNullable(license.getLicenseId()).orElse(license.fingerprint());
             if (id != null) {
                 return new URL(revocationURLTemplate.replaceAll("\\$\\{licenseId}", id.toString()));
             } else {
@@ -119,16 +120,16 @@ public class RevocableLicense {
      * license is not revoked.
      */
     public boolean isRevoked(final boolean defaultRevocationState) {
-        var revoked = true;
+        boolean revoked = true;
         try {
-            final var url = getRevocationURL();
+            final URL url = getRevocationURL();
             if (url == null) {
                 return false;
             }
-            final var con = httpHandler.open(url);
+            final URLConnection con = httpHandler.open(url);
             con.setUseCaches(false);
             if (con instanceof HttpURLConnection) {
-                final var hCon = (HttpURLConnection) con;
+                final HttpURLConnection hCon = (HttpURLConnection) con;
                 hCon.connect();
                 return httpHandler.responseCode(hCon) != HttpURLConnection.HTTP_OK;
             }

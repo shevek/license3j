@@ -8,7 +8,7 @@ package javax0.license3j.parsers;
 public class NumericParser {
 
     private static long numberParse(final String s, long minValue, long maxValue) {
-        final var trimmed = s.trim();
+        final String trimmed = s.trim();
         final long parsedValue;
         final long correctedValue;
         if (trimmed.startsWith("0x")) {

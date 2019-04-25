@@ -62,8 +62,8 @@ public class License {
      * @return {@code true} if the license has expired.
      */
     public boolean isExpired() {
-        final var expiryDate = get(EXPIRATION_DATE).getDate();
-        final var today = new Date();
+        final Date expiryDate = get(EXPIRATION_DATE).getDate();
+        final Date today = new Date();
         return today.getTime() > expiryDate.getTime();
     }
 
@@ -101,12 +101,12 @@ public class License {
     public void sign(PrivateKey key, String digest) throws NoSuchAlgorithmException, NoSuchPaddingException,
         InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         add(Feature.Create.stringFeature(DIGEST_KEY, digest));
-        final var digester = MessageDigest.getInstance(digest);
-        final var ser = unsigned();
-        final var digestValue = digester.digest(ser);
-        final var cipher = Cipher.getInstance(key.getAlgorithm());
+        final MessageDigest digester = MessageDigest.getInstance(digest);
+        final byte[] ser = unsigned();
+        final byte[] digestValue = digester.digest(ser);
+        final Cipher cipher = Cipher.getInstance(key.getAlgorithm());
         cipher.init(Cipher.ENCRYPT_MODE, key);
-        final var signature = cipher.doFinal(digestValue);
+        final byte[] signature = cipher.doFinal(digestValue);
         add(signature);
     }
 
@@ -134,12 +134,12 @@ public class License {
      */
     public boolean isOK(PublicKey key) {
         try {
-            final var digester = MessageDigest.getInstance(get(DIGEST_KEY).getString());
-            final var ser = unsigned();
-            final var digestValue = digester.digest(ser);
-            final var cipher = Cipher.getInstance(key.getAlgorithm());
+            final MessageDigest digester = MessageDigest.getInstance(get(DIGEST_KEY).getString());
+            final byte[] ser = unsigned();
+            final byte[] digestValue = digester.digest(ser);
+            final Cipher cipher = Cipher.getInstance(key.getAlgorithm());
             cipher.init(Cipher.DECRYPT_MODE, key);
-            final var sigDigest = cipher.doFinal(getSignature());
+            final byte[] sigDigest = cipher.doFinal(getSignature());
             return Arrays.equals(digestValue, sigDigest);
         } catch (Exception e) {
             return false;
@@ -196,10 +196,10 @@ public class License {
      */
     @Override
     public String toString() {
-        final var sb = new StringBuilder();
-        Feature[] features = featuresSorted(Set.of());
+        final StringBuilder sb = new StringBuilder();
+        Feature[] features = featuresSorted(new HashSet<String>());
         for (Feature feature : features) {
-            final var valueString = feature.valueString();
+            final String valueString = feature.valueString();
             final String value =
                 valueString.contains("\n") || valueString.startsWith("<<")
                     ? multilineValueString(valueString) : valueString;
@@ -231,14 +231,14 @@ public class License {
      * {@code HERE_STRING} line.
      */
     private String multilineValueString(String s) {
-        List<String> lines = new ArrayList<>(List.of(s.split("\n")));
-        final var sb = new StringBuilder();
-        var i = 0;
-        for (final var line : lines) {
+        List<String> lines = new ArrayList<>(Arrays.asList(s.split("\n")));
+        final StringBuilder sb = new StringBuilder();
+        int i = 0;
+        for (final String line : lines) {
             sb.append(line.length() <= i || line.charAt(i) == 'A' ? 'B' : 'A');
             i++;
         }
-        final var delimiter = sb.toString();
+        final String delimiter = sb.toString();
         String shortDelimiter = null;
         for (int j = 1; j < delimiter.length(); j++) {
             if (!lines.contains(delimiter.substring(0, j))) {
@@ -263,7 +263,7 @@ public class License {
      * @return the generated identifier.
      */
     public UUID setLicenseId() {
-        final var uuid = UUID.randomUUID();
+        final UUID uuid = UUID.randomUUID();
         setLicenseId(uuid);
         return uuid;
     }
@@ -308,10 +308,13 @@ public class License {
      */
     public UUID fingerprint() {
         try {
-            final var bb = ByteBuffer.wrap(MessageDigest.getInstance("MD5").digest(
-                serialized(Set.of(SIGNATURE_KEY, DIGEST_KEY))));
-            final var ms = bb.getLong();
-            final var ls = bb.getLong();
+        	Set<String> set = new HashSet<>();
+        	set.add(SIGNATURE_KEY);
+        	set.add(DIGEST_KEY);
+            final ByteBuffer bb = ByteBuffer.wrap(MessageDigest.getInstance("MD5").digest(
+                serialized( set )));
+            final long ms = bb.getLong();
+            final long ls = bb.getLong();
             return new UUID(ms, ls);
         } catch (final Exception e) {
             return null;
@@ -336,7 +339,7 @@ public class License {
      * @return the license in binary format as a byte array
      */
     public byte[] serialized() {
-        return serialized(Set.of());
+        return serialized(new HashSet<String>());
     }
 
     /**
@@ -347,7 +350,9 @@ public class License {
      * during the signature creation of the license and stored as a feature in the license is also signed.
      */
     public byte[] unsigned() {
-        return serialized(Set.of(SIGNATURE_KEY));
+    	Set<String> set = new HashSet<>();
+    	set.add(SIGNATURE_KEY);
+        return serialized(set);
     }
 
     /**
@@ -382,19 +387,19 @@ public class License {
      */
     private byte[] serialized(Set<String> excluded) {
         Feature[] includedFeatures = featuresSorted(excluded);
-        final var featureNr = includedFeatures.length;
+        final int featureNr = includedFeatures.length;
         byte[][] featuresSerialized = new byte[featureNr][];
-        var i = 0;
-        var size = 0;
-        for (final var feature : includedFeatures) {
+        int i = 0;
+        int size = 0;
+        for (final Feature feature : includedFeatures) {
             featuresSerialized[i] = feature.serialized();
             size += featuresSerialized[i].length;
             i++;
         }
 
-        final var buffer = ByteBuffer.allocate(size + Integer.BYTES * (featureNr + 1));
+        final ByteBuffer buffer = ByteBuffer.allocate(size + Integer.BYTES * (featureNr + 1));
         buffer.putInt(MAGIC);
-        for (final var featureSerialized : featuresSerialized) {
+        for (final byte[] featureSerialized : featuresSerialized) {
             buffer.putInt(featureSerialized.length);
             buffer.put(featureSerialized);
         }
@@ -415,18 +420,18 @@ public class License {
             if (array.length < Integer.BYTES) {
                 throw new IllegalArgumentException("serialized license is too short");
             }
-            final var license = new License();
-            final var buffer = ByteBuffer.wrap(array);
-            final var magic = buffer.getInt();
+            final License license = new License();
+            final ByteBuffer buffer = ByteBuffer.wrap(array);
+            final int magic = buffer.getInt();
             if (magic != MAGIC) {
                 throw new IllegalArgumentException("serialized license is corrupt");
             }
             while (buffer.hasRemaining()) {
                 try {
-                    final var featureLength = buffer.getInt();
-                    final var featureSerialized = new byte[featureLength];
+                    final int featureLength = buffer.getInt();
+                    final byte[] featureSerialized = new byte[featureLength];
                     buffer.get(featureSerialized);
-                    final var feature = Feature.Create.from(featureSerialized);
+                    final Feature feature = Feature.Create.from(featureSerialized);
                     license.add(feature);
                 } catch (BufferUnderflowException e) {
                     throw new IllegalArgumentException(e);
@@ -447,14 +452,14 @@ public class License {
          * @return the license
          */
         public static License from(final String text) {
-            final var license = new License();
-            try (var reader = new BufferedReader(new StringReader(text))) {
+            final License license = new License();
+            try (BufferedReader reader = new BufferedReader(new StringReader(text))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    final var parts = Feature.splitString(line);
-                    final var name = parts[0];
-                    final var typeString = parts[1];
-                    final var valueString = getValueString(reader, parts[2]);
+                    final String[] parts = Feature.splitString(line);
+                    final String name = parts[0];
+                    final String typeString = parts[1];
+                    final String valueString = getValueString(reader, parts[2]);
                     license.add(Feature.getFeature(name, typeString, valueString));
                 }
                 return license;
@@ -481,8 +486,8 @@ public class License {
          */
         private static String getValueString(BufferedReader reader, String valueString) throws IOException {
             if (valueString.startsWith("<<")) {
-                final var endLine = valueString.substring(2).trim();
-                final var sb = new StringBuilder();
+                final String endLine = valueString.substring(2).trim();
+                final StringBuilder sb = new StringBuilder();
                 String valueNextLine;
                 while ((valueNextLine = reader.readLine()) != null) {
                     if (valueNextLine.trim().equals(endLine)) {

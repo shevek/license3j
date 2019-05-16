@@ -1,3 +1,7 @@
+# License3j port to Java 8
+
+This is a port of License3j to Java 8 and Gradle with bug fixes.
+
 # License3j Free License management for Java
 
 License3j is a free and open source Java library to manage license files

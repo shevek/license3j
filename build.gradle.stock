@@ -1,0 +1,72 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		jcenter()
+	}
+
+	dependencies {
+		// classpath 'org.anarres.gradle:gradle-stdproject-plugin:1.0.8'
+		classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'com.bmuschko.nexus'
+// apply plugin: 'org.anarres.stdmodule'
+// 
+// stdmodule {
+// 	description "A Gradle plugin for the Velocity pre-processor."
+// 	license 'Apache-2.0'
+// }
+
+group = 'org.anarres.mirrors.license3j'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+repositories {
+     maven { url "http://repo.maven.apache.org/maven2" }
+}
+
+dependencies {
+    testCompile group: 'org.mockito', name: 'mockito-all', version:'1.10.19'
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version:'5.3.1'
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version:'5.3.1'
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			pom {
+
+				name = 'Java License Management Library'
+				description = 'A cryptographic license management library.'
+				url = 'https://github.com/shevek/license3j'
+				// inceptionYear = '2019'
+
+				licenses {
+					license {
+						name = 'The Apache Software License, Version 2.0'
+						url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+					}
+				}
+
+				scm {
+					url = 'https://github.com/shevek/license3j'
+					connection = 'scm:https://github.com/shevek/license3j.git'
+					developerConnection = 'scm:git://github.com/shevek/license3j.git'
+				}
+
+				developers {
+					developer { id = 'shevek'; name = 'Shevek'; email = 'github@anarres.org'; }
+					developer { id = 'senebii'; name = 'Francis'; email = 'francis@farabi.ae'; }
+					developer { id = 'verhas'; name = 'Peter Verhas'; email = 'peter@verhas.com'; }
+				}
+			}
+		}
+	}
+}

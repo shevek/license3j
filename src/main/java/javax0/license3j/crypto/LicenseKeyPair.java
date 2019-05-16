@@ -188,13 +188,13 @@ public class LicenseKeyPair {
 
         private static PublicKey getPublicEncoded(byte[] buffer) throws NoSuchAlgorithmException, InvalidKeySpecException {
             final X509EncodedKeySpec spec = new X509EncodedKeySpec(getEncoded(buffer));
-            final KeyFactory factory = KeyFactory.getInstance(getAlgorithm(buffer));
+            final KeyFactory factory = KeyFactory.getInstance(algorithmPrefix(getAlgorithm(buffer)));
             return factory.generatePublic(spec);
         }
 
         private static PrivateKey getPrivateEncoded(byte[] buffer) throws NoSuchAlgorithmException, InvalidKeySpecException {
             final PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(getEncoded(buffer));
-            final KeyFactory factory = KeyFactory.getInstance(getAlgorithm(buffer));
+            final KeyFactory factory = KeyFactory.getInstance(algorithmPrefix(getAlgorithm(buffer)));
             return factory.generatePrivate(spec);
         }
 

@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -46,6 +47,7 @@ public class Feature implements Serializable {
             "yyyy-MM-dd HH",
             "yyyy-MM-dd"
         };
+    private static final TimeZone DATE_ZONE = TimeZone.getTimeZone("UTC");
     private static final int VARIABLE_LENGTH = -1;
     private final String name;
     private final Type type;
@@ -58,13 +60,17 @@ public class Feature implements Serializable {
     }
 
     private static String dateFormat(Object date) {
-        return new SimpleDateFormat(DATE_FORMAT[0]).format(date);
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT[0]);
+        sdf.setTimeZone(DATE_ZONE);
+        return sdf.format(date);
     }
 
     private static Date dateParse(String date) {
         for (String format : DATE_FORMAT) {
             try {
-                return new SimpleDateFormat(format).parse(date);
+                SimpleDateFormat sdf = new SimpleDateFormat(format);
+                sdf.setTimeZone(DATE_ZONE);
+                return sdf.parse(date);
             } catch (ParseException ignored) {
             }
         }

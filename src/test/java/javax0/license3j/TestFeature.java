@@ -475,20 +475,21 @@ public class TestFeature {
     @Test
     @DisplayName("date feature is converted from string")
     public void testDateFromString() {
+        int tzoff = 3600 * 1000;    // The original author was clearly in UTC+1 or UTC-1.
         final Feature sut1 = Feature.Create.from("name:DATE=2018-12-17 12:55:19.295");
         Assertions.assertEquals("name", sut1.name());
         Assertions.assertTrue(sut1.isDate());
-        Assertions.assertEquals(new Date(1545047719295L), sut1.getDate());
+        Assertions.assertEquals(new Date(1545047719295L + tzoff), sut1.getDate());
 
         final Feature sut2 = Feature.Create.from("name:DATE=2018-12-17 12:55:19");
         Assertions.assertEquals("name", sut2.name());
         Assertions.assertTrue(sut2.isDate());
-        Assertions.assertEquals(new Date(1545047719000L), sut2.getDate());
+        Assertions.assertEquals(new Date(1545047719000L + tzoff), sut2.getDate());
 
         final Feature sut3 = Feature.Create.from("name:DATE=2018-12-17 12:55");
         Assertions.assertEquals("name", sut3.name());
         Assertions.assertTrue(sut3.isDate());
-        Assertions.assertEquals(new Date(1545047700000L), sut3.getDate());
+        Assertions.assertEquals(new Date(1545047700000L + tzoff), sut3.getDate());
     }
 
 

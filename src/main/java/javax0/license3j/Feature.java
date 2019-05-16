@@ -1,5 +1,6 @@
 package javax0.license3j;
 
+import java.io.Serializable;
 import javax0.license3j.parsers.NumericParser;
 
 import java.math.BigDecimal;
@@ -37,7 +38,7 @@ import java.util.function.Function;
  * used as an argument to the utility method {@link Create#from(byte[])} to create a {@code Feature} of the same name
  * and the same value.
  */
-public class Feature {
+public class Feature implements Serializable {
     private static final String[] DATE_FORMAT =
         {"yyyy-MM-dd HH:mm:ss.SSS",
             "yyyy-MM-dd HH:mm:ss",

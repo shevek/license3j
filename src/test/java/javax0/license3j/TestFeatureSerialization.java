@@ -27,7 +27,7 @@ public class TestFeatureSerialization {
     @Test
     @DisplayName("Zero length name byte feature is serialized ok")
     void testZeroLengthNameByteSerialize() {
-        final var sut = Feature.Create.byteFeature("", (byte)0xAF);
+        final Feature sut = Feature.Create.byteFeature("", (byte)0xAF);
         Assertions.assertEquals(
             "00000003" +//type 1 binary
                 "00000000" + // name length
@@ -37,7 +37,7 @@ public class TestFeatureSerialization {
     @Test
     @DisplayName("Zero length name byte feature is loaded ok")
     void testZeroLengthByteLoad() {
-        final var sut = Feature.Create.from(fromHex(
+        final Feature sut = Feature.Create.from(fromHex(
             "00000003" +//type 1 binary
                 "00000000" + // name length
                 "AF" // value
@@ -47,7 +47,7 @@ public class TestFeatureSerialization {
     @Test
     @DisplayName("Zero length binary is serialized ok")
     void testZeroLengthBinarySerialize() {
-        final var sut = Feature.Create.binaryFeature("", new byte[0]);
+        final Feature sut = Feature.Create.binaryFeature("", new byte[0]);
         Assertions.assertEquals(
             "00000001" +//type 1 binary
                 "00000000" + // name length
@@ -58,7 +58,7 @@ public class TestFeatureSerialization {
     @Test
     @DisplayName("Zero length binary is loaded ok")
     void testZeroLengthBinaryLoad() {
-        final var sut = Feature.Create.from(fromHex(
+        final Feature sut = Feature.Create.from(fromHex(
             "00000001" +//type 1 binary
                 "00000000" + // name length
                 "00000000" // value length
@@ -69,7 +69,7 @@ public class TestFeatureSerialization {
     @Test
     @DisplayName("One byte binary is serialized ok")
     void testOneByteBinarySerialize() {
-        final var sut = Feature.Create.binaryFeature("", new byte[]{(byte) 0xAF});
+        final Feature sut = Feature.Create.binaryFeature("", new byte[]{(byte) 0xAF});
         Assertions.assertEquals(
             "00000001" +//type 1 binary
                 "00000000" + // name length
@@ -81,7 +81,7 @@ public class TestFeatureSerialization {
     @Test
     @DisplayName("One byte binary is loaded ok")
     void testOneByteBinaryLoad() {
-        final var sut = Feature.Create.from(fromHex(
+        final Feature sut = Feature.Create.from(fromHex(
             "00000001" //type 1 binary
                 + "00000000"  // name length
                 + "00000001" // value length

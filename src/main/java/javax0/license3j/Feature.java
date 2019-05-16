@@ -61,7 +61,7 @@ public class Feature {
     }
 
     private static Date dateParse(String date) {
-        for (var format : DATE_FORMAT) {
+        for (String format : DATE_FORMAT) {
             try {
                 return new SimpleDateFormat(format).parse(date);
             } catch (ParseException ignored) {
@@ -71,7 +71,7 @@ public class Feature {
     }
 
     static String[] splitString(String s) {
-        var nameEnd = s.indexOf(":");
+        int nameEnd = s.indexOf(":");
         final int typeEnd = s.indexOf("=", nameEnd + 1);
         if (nameEnd > typeEnd) {
             nameEnd = -1;
@@ -88,13 +88,13 @@ public class Feature {
             name = s.substring(0, typeEnd).trim();
             typeString = "STRING";
         }
-        final var valueString = s.substring(typeEnd + 1);
+        final String valueString = s.substring(typeEnd + 1);
         return new String[]{name, typeString, valueString};
     }
 
     static Feature getFeature(String name, String typeString, String valueString) {
-        final var type = Type.valueOf(typeString);
-        final var value = type.unstringer.apply(valueString);
+        final Type type = Type.valueOf(typeString);
+        final Object value = type.unstringer.apply(valueString);
         return type.factory.apply(name, value);
     }
 
@@ -139,11 +139,11 @@ public class Feature {
      * @return the byte array representation of the feature
      */
     public byte[] serialized() {
-        final var nameBuffer = name.getBytes(StandardCharsets.UTF_8);
-        final var typeLength = Integer.BYTES;
-        final var nameLength = Integer.BYTES + nameBuffer.length;
-        final var valueLength = type.fixedSize == VARIABLE_LENGTH ? Integer.BYTES + value.length : type.fixedSize;
-        final var buffer = ByteBuffer.allocate(typeLength + nameLength + valueLength)
+        final byte[] nameBuffer = name.getBytes(StandardCharsets.UTF_8);
+        final int typeLength = Integer.BYTES;
+        final int nameLength = Integer.BYTES + nameBuffer.length;
+        final int valueLength = type.fixedSize == VARIABLE_LENGTH ? Integer.BYTES + value.length : type.fixedSize;
+        final ByteBuffer buffer = ByteBuffer.allocate(typeLength + nameLength + valueLength)
             .putInt(type.serialized)
             .putInt(nameBuffer.length);
         if (type.fixedSize == VARIABLE_LENGTH) {
@@ -268,8 +268,8 @@ public class Feature {
         if (type != Type.BIGDECIMAL) {
             throw new IllegalArgumentException("Feature is not BIGDECIMAL");
         }
-        var bb = ByteBuffer.wrap(value);
-        var scale = bb.getInt(value.length - Integer.BYTES);
+        ByteBuffer bb = ByteBuffer.wrap(value);
+        int scale = bb.getInt(value.length - Integer.BYTES);
 
         return new BigDecimal(new BigInteger(Arrays.copyOf(value, value.length - Integer.BYTES)), scale);
     }
@@ -278,9 +278,9 @@ public class Feature {
         if (type != Type.UUID) {
             throw new IllegalArgumentException("Feature is not UUID");
         }
-        var bb = ByteBuffer.wrap(value);
-        final var ls = bb.getLong();
-        final var ms = bb.getLong();
+        ByteBuffer bb = ByteBuffer.wrap(value);
+        final long ls = bb.getLong();
+        final long ms = bb.getLong();
         return new java.util.UUID(ms, ls);
     }
 
@@ -456,7 +456,7 @@ public class Feature {
          * @return the new object created from the string
          */
         public static Feature from(String s) {
-            final var parts = Feature.splitString(s);
+            final String[] parts = Feature.splitString(s);
             return getFeature(parts[0], parts[1], parts[2]);
         }
 
@@ -472,25 +472,25 @@ public class Feature {
                 throw new IllegalArgumentException("Cannot load feature from a byte array that has "
                     + serialized.length + " bytes which is < " + (2 * Integer.BYTES));
             }
-            var bb = ByteBuffer.wrap(serialized);
-            var typeSerialized = bb.getInt();
+            ByteBuffer bb = ByteBuffer.wrap(serialized);
+            int typeSerialized = bb.getInt();
             final Type type = typeFrom(typeSerialized);
-            final var nameLength = bb.getInt();
+            final int nameLength = bb.getInt();
             if (nameLength < 0) {
                 throw new IllegalArgumentException("Name size is too big. 31bit length should be enough.");
             }
-            final var valueLength = type.fixedSize == VARIABLE_LENGTH ? bb.getInt() : type.fixedSize;
+            final int valueLength = type.fixedSize == VARIABLE_LENGTH ? bb.getInt() : type.fixedSize;
             if (valueLength < 0) {
                 throw new IllegalArgumentException("Value size is too big. 31bit length should be enough.");
             }
-            final var nameBuffer = new byte[nameLength];
+            final byte[] nameBuffer = new byte[nameLength];
             if (nameLength > 0) {
                 if (bb.remaining() < nameLength) {
                     throw new IllegalArgumentException("Feature binary is too short. It is " + (valueLength + nameLength - bb.remaining()) + " bytes shy.");
                 }
                 bb.get(nameBuffer);
             }
-            final var value = new byte[valueLength];
+            final byte[] value = new byte[valueLength];
             if (valueLength > 0) {
                 if (bb.remaining() < valueLength) {
                     throw new IllegalArgumentException("Feature binary is too short. It is " + (valueLength - bb.remaining()) + " bytes shy.");
@@ -501,12 +501,12 @@ public class Feature {
                 throw new IllegalArgumentException("Cannot load feature from a byte array that has "
                     + serialized.length + " bytes which is " + bb.remaining() + " bytes too long");
             }
-            final var name = new String(nameBuffer, StandardCharsets.UTF_8);
+            final String name = new String(nameBuffer, StandardCharsets.UTF_8);
             return new Feature(name, type, value);
         }
 
         private static Type typeFrom(int typeSerialized) {
-            for (final var type : Type.values()) {
+            for (final Type type : Type.values()) {
                 if (type.serialized == typeSerialized) {
                     return type;
                 }

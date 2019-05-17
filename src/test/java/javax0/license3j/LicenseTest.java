@@ -12,6 +12,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.UUID;
 
@@ -21,16 +23,16 @@ class LicenseTest {
     @DisplayName("Creates a license and then it can access the features.")
     void createLicenseViaAPI() {
         final License sut = new License();
-        final Date now = new Date(1545047719295L);
+        final Instant now = Instant.ofEpochMilli(1545047719295L);
         addSampleFeatures(sut, now);
         Assertions.assertEquals("Peter Verhas", sut.get("owner").getString());
-        Assertions.assertEquals(now, sut.get("expiry").getDate());
+        Assertions.assertEquals(now, sut.get("expiry").getInstant());
     }
 
-    private void addSampleFeatures(License sut, Date now) {
+    private void addSampleFeatures(License sut, Instant now) {
         sut.add(Feature.Create.stringFeature("owner", "Peter Verhas"));
         sut.add(Feature.Create.stringFeature("title", "A license test, \ntest license"));
-        sut.add(Feature.Create.dateFeature("expiry", now));
+        sut.add(Feature.Create.instantFeature("expiry", now));
         sut.add(Feature.Create.stringFeature("template", "<<special template>>"));
     }
 
@@ -38,13 +40,13 @@ class LicenseTest {
     @DisplayName("Create a license with features serialize and restore then the features are the same")
     void licenseSerializeAndDeserialize() {
         final License sut = new License();
-        final Date now = new Date(1545047719295L);
+        final Instant now = Instant .ofEpochMilli(1545047719295L);
         addSampleFeatures(sut, now);
         byte[] buffer = sut.serialized();
         final License restored = License.Create.from(buffer);
         Assertions.assertEquals("Peter Verhas", restored.get("owner").getString());
-        Assertions.assertEquals(now, restored.get("expiry").getDate());
-        Assertions.assertEquals("expiry:DATE=2018-12-17 12:55:19.295\n" +
+        Assertions.assertEquals(now, restored.get("expiry").getInstant());
+        Assertions.assertEquals("expiry:INSTANT=2018-12-17T11:55:19.295Z\n" +
                 "owner=Peter Verhas\n" +
                 "template=<<null\n" +
                 "<<special template>>\n" +
@@ -59,13 +61,13 @@ class LicenseTest {
     @DisplayName("Create a license with features convert to string and restore then the features are the same")
     void licenseStringifyAndDestringify() {
         final License sut = new License();
-        final Date now = new Date(1545047719295L);
+        final Instant now = Instant.ofEpochMilli(1545047719295L);
         addSampleFeatures(sut, now);
         String string = sut.toString();
         final License restored = License.Create.from(string);
         Assertions.assertEquals("Peter Verhas", restored.get("owner").getString());
-        Assertions.assertEquals(now, restored.get("expiry").getDate());
-        Assertions.assertEquals("expiry:DATE=2018-12-17 12:55:19.295\n" +
+        Assertions.assertEquals(now, restored.get("expiry").getInstant());
+        Assertions.assertEquals("expiry:INSTANT=2018-12-17T11:55:19.295Z\n" +
                 "owner=Peter Verhas\n" +
                 "template=<<null\n" +
                 "<<special template>>\n" +
@@ -81,7 +83,7 @@ class LicenseTest {
     void testLicenseFingerprint() throws NoSuchAlgorithmException, IllegalBlockSizeException,
         InvalidKeyException, BadPaddingException, NoSuchPaddingException {
         final License sut = new License();
-        final Date now = new Date(1545047719295L);
+        final Instant now = Instant.ofEpochMilli(1545047719295L);
         addSampleFeatures(sut, now);
         final UUID fpUnsigned = sut.fingerprint();
         LicenseKeyPair keysRSA1024 = LicenseKeyPair.Create.from("RSA",  1000);
@@ -98,7 +100,7 @@ class LicenseTest {
     @DisplayName("A license with an expiry date a day ago has expired")
     void pastExpiryTimeReportsExpired() {
         final License license = new License();
-        license.setExpiry(new Date(new Date().getTime() - 24 * 60 * 60 * 1000));
+        license.setExpiry(Instant.now().minus(1, ChronoUnit.DAYS));
         Assertions.assertTrue(license.isExpired());
     }
 
@@ -106,7 +108,7 @@ class LicenseTest {
     @DisplayName("A license with an expiry date a day ahead has not expired")
     void futureExpiryTimeReportsNonExpired()  {
         final License lic = new License();
-        lic.setExpiry(new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
+        lic.setExpiry(Instant.now().plus(1, ChronoUnit.DAYS));
         Assertions.assertFalse(lic.isExpired());
     }
 

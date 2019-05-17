@@ -13,6 +13,7 @@ import java.lang.reflect.Modifier;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.*;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -24,7 +25,7 @@ import java.util.*;
  */
 public class License {
     private static final int MAGIC = 0x21CE_4E_5E; // LICE(N=4E)SE
-    final private static String LICENSE_ID = "licenseId";
+    public static final String LICENSE_ID = "licenseId";
     private static final String SIGNATURE_KEY = "licenseSignature";
     private static final String DIGEST_KEY = "signatureDigest";
     final private static String EXPIRATION_DATE = "expiryDate";
@@ -62,9 +63,9 @@ public class License {
      * @return {@code true} if the license has expired.
      */
     public boolean isExpired() {
-        final Date expiryDate = get(EXPIRATION_DATE).getDate();
-        final Date today = new Date();
-        return today.getTime() > expiryDate.getTime();
+        final Instant expiresAt = get(EXPIRATION_DATE).getInstant();
+        final Instant now = Instant.now();
+        return now.isAfter(expiresAt);
     }
 
     /**
@@ -72,8 +73,8 @@ public class License {
      *
      * @param expiryDate the date when the license expires
      */
-    public void setExpiry(final Date expiryDate) {
-        add(Feature.Create.dateFeature(EXPIRATION_DATE, expiryDate));
+    public void setExpiry(final Instant expiryDate) {
+        add(Feature.Create.instantFeature(EXPIRATION_DATE, expiryDate));
     }
     /**
      * Sign the license.

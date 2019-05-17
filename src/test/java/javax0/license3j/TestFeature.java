@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
@@ -171,13 +172,13 @@ public class TestFeature {
     }
 
     @Test
-    @DisplayName("Date feature, serialize and restore")
-    public void testDate() {
-    	Date now = new Date();
-        Feature sut = Create.dateFeature("feature name", now);
+    @DisplayName("Instant feature, serialize and restore")
+    public void testInstant() {
+    	Instant now = Instant.now();
+        Feature sut = Create.instantFeature("feature name", now);
         byte[] b = sut.serialized();
         Feature res = Create.from(b);
-        Assertions.assertEquals(now, res.getDate());
+        Assertions.assertEquals(now, res.getInstant());
     }
 
     @Test
@@ -475,21 +476,10 @@ public class TestFeature {
     @Test
     @DisplayName("date feature is converted from string")
     public void testDateFromString() {
-        int tzoff = 3600 * 1000;    // The original author was clearly in UTC+1 or UTC-1.
-        final Feature sut1 = Feature.Create.from("name:DATE=2018-12-17 12:55:19.295");
+        final Feature sut1 = Feature.Create.from("name:INSTANT=2018-12-17T12:55:19.295Z");
         Assertions.assertEquals("name", sut1.name());
-        Assertions.assertTrue(sut1.isDate());
-        Assertions.assertEquals(new Date(1545047719295L + tzoff), sut1.getDate());
-
-        final Feature sut2 = Feature.Create.from("name:DATE=2018-12-17 12:55:19");
-        Assertions.assertEquals("name", sut2.name());
-        Assertions.assertTrue(sut2.isDate());
-        Assertions.assertEquals(new Date(1545047719000L + tzoff), sut2.getDate());
-
-        final Feature sut3 = Feature.Create.from("name:DATE=2018-12-17 12:55");
-        Assertions.assertEquals("name", sut3.name());
-        Assertions.assertTrue(sut3.isDate());
-        Assertions.assertEquals(new Date(1545047700000L + tzoff), sut3.getDate());
+        Assertions.assertTrue(sut1.isInstant());
+        Assertions.assertEquals(1545051319295L, sut1.getInstant().toEpochMilli());
     }
 
 
@@ -561,8 +551,8 @@ public class TestFeature {
     @Test
     @DisplayName("Date feature is converted to string")
     public void testDateToString() {
-        final Feature sut = Feature.Create.dateFeature("now", new Date(1545047719295L));
-        Assertions.assertEquals("now:DATE=2018-12-17 12:55:19.295", sut.toString());
+        final Feature sut = Feature.Create.instantFeature("now", Instant.ofEpochMilli(1545047719295L));
+        Assertions.assertEquals("now:INSTANT=2018-12-17T11:55:19.295Z", sut.toString());
     }
 }
 
